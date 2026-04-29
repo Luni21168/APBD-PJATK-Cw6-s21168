@@ -397,4 +397,56 @@ WHERE IdAppointment = @IdAppointment;";
             Message = "Appointment updated successfully."
         });
     }
+    [HttpDelete("{idAppointment:int}")]
+    public async Task<ActionResult> DeleteAppointment([FromRoute] int idAppointment)
+    {
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string checkSql = @"
+SELECT Status
+FROM dbo.Appointments
+WHERE IdAppointment = @IdAppointment;";
+
+        string status;
+
+        await using (var checkCommand = new SqlCommand(checkSql, connection))
+        {
+            checkCommand.Parameters.AddWithValue("@IdAppointment", idAppointment);
+
+            var result = await checkCommand.ExecuteScalarAsync();
+
+            if (result == null)
+            {
+                return NotFound(new ErrorResponseDto
+                {
+                    Message = $"Appointment with id {idAppointment} was not found."
+                });
+            }
+
+            status = result.ToString()!;
+        }
+
+        if (status == "Completed")
+        {
+            return Conflict(new ErrorResponseDto
+            {
+                Message = "Completed appointment cannot be deleted."
+            });
+        }
+
+        const string deleteSql = @"
+DELETE FROM dbo.Appointments
+WHERE IdAppointment = @IdAppointment;";
+
+        await using (var deleteCommand = new SqlCommand(deleteSql, connection))
+        {
+            deleteCommand.Parameters.AddWithValue("@IdAppointment", idAppointment);
+            await deleteCommand.ExecuteNonQueryAsync();
+        }
+
+        return NoContent();
+    }
 }

@@ -49,3 +49,7 @@ Content-Type: application/json
   "reason": "Rescheduled cardiology visit",
   "internalNotes": "Patient asked for a new time"
 }
+
+
+### Delete appointment
+DELETE {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
