@@ -136,4 +136,113 @@ WHERE a.IdAppointment = @IdAppointment;";
 
         return Ok(dto);
     }
+
+    [HttpPost]
+    public async Task<ActionResult> CreateAppointment([FromBody] CreateAppointmentRequestDto request)
+    {
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        if (request.AppointmentDate <= DateTime.Now)
+        {
+            return BadRequest(new ErrorResponseDto
+            {
+                Message = "Appointment date cannot be in the past."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+        {
+            return BadRequest(new ErrorResponseDto
+            {
+                Message = "Reason is required."
+            });
+        }
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        const string patientSql = @"
+SELECT COUNT(1)
+FROM dbo.Patients
+WHERE IdPatient = @IdPatient AND IsActive = 1;";
+
+        await using (var patientCommand = new SqlCommand(patientSql, connection))
+        {
+            patientCommand.Parameters.AddWithValue("@IdPatient", request.IdPatient);
+            var patientExists = (int)(await patientCommand.ExecuteScalarAsync() ?? 0);
+
+            if (patientExists == 0)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    Message = "Patient does not exist or is inactive."
+                });
+            }
+        }
+
+        const string doctorSql = @"
+SELECT COUNT(1)
+FROM dbo.Doctors
+WHERE IdDoctor = @IdDoctor AND IsActive = 1;";
+
+        await using (var doctorCommand = new SqlCommand(doctorSql, connection))
+        {
+            doctorCommand.Parameters.AddWithValue("@IdDoctor", request.IdDoctor);
+            var doctorExists = (int)(await doctorCommand.ExecuteScalarAsync() ?? 0);
+
+            if (doctorExists == 0)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    Message = "Doctor does not exist or is inactive."
+                });
+            }
+        }
+
+        const string conflictSql = @"
+SELECT COUNT(1)
+FROM dbo.Appointments
+WHERE IdDoctor = @IdDoctor
+  AND AppointmentDate = @AppointmentDate
+  AND Status = 'Scheduled';";
+
+        await using (var conflictCommand = new SqlCommand(conflictSql, connection))
+        {
+            conflictCommand.Parameters.AddWithValue("@IdDoctor", request.IdDoctor);
+            conflictCommand.Parameters.AddWithValue("@AppointmentDate", request.AppointmentDate);
+
+            var conflictExists = (int)(await conflictCommand.ExecuteScalarAsync() ?? 0);
+
+            if (conflictExists > 0)
+            {
+                return Conflict(new ErrorResponseDto
+                {
+                    Message = "Doctor already has another scheduled appointment at this time."
+                });
+            }
+        }
+
+        const string insertSql = @"
+INSERT INTO dbo.Appointments (IdPatient, IdDoctor, AppointmentDate, Status, Reason)
+OUTPUT INSERTED.IdAppointment
+VALUES (@IdPatient, @IdDoctor, @AppointmentDate, 'Scheduled', @Reason);";
+
+        int newId;
+        await using (var insertCommand = new SqlCommand(insertSql, connection))
+        {
+            insertCommand.Parameters.AddWithValue("@IdPatient", request.IdPatient);
+            insertCommand.Parameters.AddWithValue("@IdDoctor", request.IdDoctor);
+            insertCommand.Parameters.AddWithValue("@AppointmentDate", request.AppointmentDate);
+            insertCommand.Parameters.AddWithValue("@Reason", request.Reason);
+
+            newId = (int)(await insertCommand.ExecuteScalarAsync() ?? 0);
+        }
+
+        return CreatedAtAction(nameof(GetAppointmentById), new { idAppointment = newId }, new
+        {
+            IdAppointment = newId,
+            Message = "Appointment created successfully."
+        });
+
+    }
 }

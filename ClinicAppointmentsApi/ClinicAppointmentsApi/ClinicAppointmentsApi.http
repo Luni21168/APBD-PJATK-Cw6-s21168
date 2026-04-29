@@ -14,3 +14,25 @@ GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
 
 ### Get non-existing appointment
 GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments/9999
+
+### Create appointment correct
+POST {{ClinicAppointmentsApi_HostAddress}}/api/appointments
+Content-Type: application/json
+
+{
+  "idPatient": 1,
+  "idDoctor": 2,
+  "appointmentDate": "2026-05-20T10:00:00",
+  "reason": "Control visit"
+}
+
+### Create appointment in the past
+POST {{ClinicAppointmentsApi_HostAddress}}/api/appointments
+Content-Type: application/json
+
+{
+  "idPatient": 1,
+  "idDoctor": 2,
+  "appointmentDate": "2020-05-20T10:00:00",
+  "reason": "Old visit"
+}
