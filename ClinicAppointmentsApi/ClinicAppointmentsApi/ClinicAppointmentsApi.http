@@ -36,3 +36,16 @@ Content-Type: application/json
   "appointmentDate": "2020-05-20T10:00:00",
   "reason": "Old visit"
 }
+
+### Update appointment
+PUT {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
+Content-Type: application/json
+
+{
+  "idPatient": 1,
+  "idDoctor": 1,
+  "appointmentDate": "2026-05-22T12:00:00",
+  "status": "Scheduled",
+  "reason": "Rescheduled cardiology visit",
+  "internalNotes": "Patient asked for a new time"
+}
