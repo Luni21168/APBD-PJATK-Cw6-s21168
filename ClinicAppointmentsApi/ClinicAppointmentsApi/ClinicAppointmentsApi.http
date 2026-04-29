@@ -1,6 +1,16 @@
 @ClinicAppointmentsApi_HostAddress = http://localhost:5205
 
-GET {{ClinicAppointmentsApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### Get all appointments
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments
 
-###
+### Get all appointments filtered by status
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments?status=Scheduled
+
+### Get all appointments filtered by patient last name
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments?patientLastName=Nowak
+
+### Get appointment by id
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
+
+### Get non-existing appointment
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments/9999
