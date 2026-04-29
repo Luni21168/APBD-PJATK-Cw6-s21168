@@ -53,3 +53,57 @@ Content-Type: application/json
 
 ### Delete appointment
 DELETE {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
+
+### Get all appointments
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments
+
+### Get appointments filtered by status
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments?status=Scheduled
+
+### Get appointments filtered by patient last name
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments?patientLastName=Nowak
+
+### Get appointment by id
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
+
+### Get non-existing appointment
+GET {{ClinicAppointmentsApi_HostAddress}}/api/appointments/9999
+
+
+### Create appointment correct
+POST {{ClinicAppointmentsApi_HostAddress}}/api/appointments
+Content-Type: application/json
+
+{
+  "idPatient": 1,
+  "idDoctor": 2,
+  "appointmentDate": "2026-06-20T15:00:00",
+  "reason": "Control visit"
+}
+
+### Create appointment in the past
+POST {{ClinicAppointmentsApi_HostAddress}}/api/appointments
+Content-Type: application/json
+
+{
+  "idPatient": 1,
+  "idDoctor": 2,
+  "appointmentDate": "2020-05-20T10:00:00",
+  "reason": "Old visit"
+}
+
+### Update appointment
+PUT {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
+Content-Type: application/json
+
+{
+  "idPatient": 1,
+  "idDoctor": 1,
+  "appointmentDate": "2026-05-22T12:00:00",
+  "status": "Scheduled",
+  "reason": "Rescheduled cardiology visit",
+  "internalNotes": "Patient asked for a new time"
+}
+
+### Delete appointment
+DELETE {{ClinicAppointmentsApi_HostAddress}}/api/appointments/1
