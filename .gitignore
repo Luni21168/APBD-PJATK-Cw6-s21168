@@ -427,3 +427,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+.DS_Store
+.idea/
+**/.idea/
+**/bin/
+**/obj/
